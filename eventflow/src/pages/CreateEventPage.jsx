@@ -1,403 +1,251 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-    Calendar, MapPin, DollarSign, Users, Image, Tag,
-    ChevronRight, CheckCircle, ArrowLeft, Clock, Info,
-    Zap, FileText, Settings
-} from 'lucide-react'
-import { CATEGORIES } from '../data/events'
+﻿import { useState } from "react"
+import { Link } from "react-router-dom"
+import { Mail, Phone, MapPin, Send, Instagram, Linkedin, Twitter, CheckCircle, CalendarDays, Users, Building2, Heart, Award } from "lucide-react"
+import { PROFILE } from "../data/events"
 
-const STEPS = [
-    { id: 1, label: 'Basics', icon: FileText },
-    { id: 2, label: 'Details', icon: Settings },
-    { id: 3, label: 'Tickets', icon: Zap },
-    { id: 4, label: 'Review', icon: CheckCircle },
+const INQUIRY_TYPES = [
+    { id: "corporate", label: "Corporate Event", icon: "🏢" },
+    { id: "wedding", label: "Wedding", icon: "💍" },
+    { id: "concert", label: "Concert / Festival", icon: "🎵" },
+    { id: "conference", label: "Conference", icon: "🎤" },
+    { id: "gala", label: "Gala / Awards", icon: "🏆" },
+    { id: "social", label: "Social / Private", icon: "🎉" },
+    { id: "other", label: "Other", icon: "✦" },
 ]
 
-const INITIAL = {
-    title: '', description: '', category: '', date: '', endDate: '',
-    time: '', location: '', image: '', organizer: '',
-    capacity: '', price: '', tags: '', isFree: false,
-}
+const BUDGET_RANGES = [
+    "Under $25K",
+    "$25K – $75K",
+    "$75K – $200K",
+    "$200K – $500K",
+    "$500K – $1M",
+    "$1M+",
+]
 
 export default function CreateEventPage() {
-    const navigate = useNavigate()
-    const [step, setStep] = useState(1)
-    const [form, setForm] = useState(INITIAL)
+    const [form, setForm] = useState({ name: "", email: "", phone: "", inquiryType: "", budget: "", eventDate: "", guests: "", message: "" })
     const [submitted, setSubmitted] = useState(false)
     const [errors, setErrors] = useState({})
 
-    const update = (field, value) => {
-        setForm(f => ({ ...f, [field]: value }))
-        if (errors[field]) setErrors(e => ({ ...e, [field]: '' }))
+    const validate = () => {
+        const e = {}
+        if (!form.name.trim()) e.name = "Name is required"
+        if (!form.email.trim()) e.email = "Email is required"
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email"
+        if (!form.inquiryType) e.inquiryType = "Please select an event type"
+        if (!form.message.trim()) e.message = "Message is required"
+        return e
     }
 
-    const validateStep = (s) => {
-        const errs = {}
-        if (s === 1) {
-            if (!form.title.trim()) errs.title = 'Title is required'
-            if (!form.description.trim()) errs.description = 'Description is required'
-            if (!form.category) errs.category = 'Please select a category'
-        }
-        if (s === 2) {
-            if (!form.date) errs.date = 'Start date is required'
-            if (!form.time) errs.time = 'Start time is required'
-            if (!form.location.trim()) errs.location = 'Location is required'
-        }
-        if (s === 3) {
-            if (!form.capacity) errs.capacity = 'Capacity is required'
-            if (!form.isFree && !form.price) errs.price = 'Set a price or mark as free'
-        }
-        return errs
-    }
-
-    const nextStep = () => {
-        const errs = validateStep(step)
-        if (Object.keys(errs).length) { setErrors(errs); return }
-        setStep(s => s + 1)
-    }
-
-    const handleSubmit = () => {
+    const handleSubmit = e => {
+        e.preventDefault()
+        const errs = validate()
+        if (Object.keys(errs).length > 0) { setErrors(errs); return }
         setSubmitted(true)
     }
 
-    if (submitted) {
-        return (
-            <div className="min-h-screen flex items-center justify-center pt-24 pb-20 px-4">
-                <div className="text-center max-w-lg animate-slide-up">
-                    <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-500/30">
-                        <CheckCircle size={36} className="text-white" />
-                    </div>
-                    <h1 className="font-display font-extrabold text-4xl text-white mb-3">Event Created! 🎉</h1>
-                    <p className="text-gray-400 text-lg mb-8">
-                        <strong className="text-white">"{form.title}"</strong> has been submitted for review. You'll receive a confirmation shortly.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <button onClick={() => navigate('/dashboard')} className="btn-primary text-base px-8 py-3">
-                            Go to Dashboard
-                        </button>
-                        <button onClick={() => { setSubmitted(false); setStep(1); setForm(INITIAL) }} className="btn-secondary text-base px-8 py-3">
-                            Create Another
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
+    const set = (field, value) => {
+        setForm(f => ({ ...f, [field]: value }))
+        if (errors[field]) setErrors(e => { const n = { ...e }; delete n[field]; return n })
     }
 
-    return (
-        <div className="min-h-screen pt-28 pb-20">
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
-                <div className="flex items-center gap-4 mb-10">
-                    <button onClick={() => step > 1 ? setStep(s => s - 1) : navigate(-1)}
-                        className="p-2 glass rounded-xl hover:bg-white/10 transition-all">
-                        <ArrowLeft size={18} />
-                    </button>
-                    <div>
-                        <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-white">Create Event</h1>
-                        <p className="text-gray-400 mt-1">Step {step} of {STEPS.length}</p>
-                    </div>
+    if (submitted) return (
+        <div className="min-h-screen flex items-center justify-center pt-20 px-4">
+            <div className="text-center animate-slide-up max-w-md">
+                <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-brand-600 to-rose-600 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-brand-600/40">
+                    <CheckCircle size={40} className="text-white" />
                 </div>
-
-                {/* Step indicator */}
-                <div className="flex items-center gap-2 mb-10 overflow-x-auto pb-2">
-                    {STEPS.map((s, i) => {
-                        const Icon = s.icon
-                        const done = step > s.id
-                        const active = step === s.id
-                        return (
-                            <div key={s.id} className="flex items-center gap-2 shrink-0">
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${active ? 'bg-brand-600/20 text-brand-400 border border-brand-500/30' :
-                                        done ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-                                            'glass text-gray-500 border-white/5'
-                                    }`}>
-                                    {done
-                                        ? <CheckCircle size={16} className="text-green-400" />
-                                        : <Icon size={16} />
-                                    }
-                                    <span className="text-sm font-medium">{s.label}</span>
-                                </div>
-                                {i < STEPS.length - 1 && (
-                                    <ChevronRight size={14} className={`${step > s.id ? 'text-green-500' : 'text-gray-700'} shrink-0`} />
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
-
-                {/* Form card */}
-                <div className="glass-dark rounded-3xl p-6 sm:p-8 border border-white/10 animate-fade-in">
-                    {/* STEP 1 – Basics */}
-                    {step === 1 && (
-                        <div className="space-y-6">
-                            <h2 className="font-display font-bold text-2xl text-white mb-6">Event Basics</h2>
-
-                            <FormField label="Event Title" error={errors.title} required>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Neon Nights Music Festival"
-                                    value={form.title}
-                                    onChange={e => update('title', e.target.value)}
-                                    className="input-field"
-                                />
-                            </FormField>
-
-                            <FormField label="Description" error={errors.description} required>
-                                <textarea
-                                    placeholder="Describe your event — what makes it special, what attendees can expect…"
-                                    value={form.description}
-                                    onChange={e => update('description', e.target.value)}
-                                    rows={5}
-                                    className="input-field resize-none"
-                                />
-                            </FormField>
-
-                            <FormField label="Category" error={errors.category} required>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    {CATEGORIES.map(cat => (
-                                        <button
-                                            key={cat.id}
-                                            type="button"
-                                            onClick={() => update('category', cat.id)}
-                                            className={`py-2.5 px-3 rounded-xl text-sm font-medium border transition-all ${form.category === cat.id
-                                                    ? `${cat.color} shadow-sm`
-                                                    : 'glass border-white/5 text-gray-400 hover:text-white hover:bg-white/5'
-                                                }`}
-                                        >
-                                            {cat.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </FormField>
-
-                            <FormField label="Organizer / Company Name">
-                                <input
-                                    type="text"
-                                    placeholder="Your name or organization"
-                                    value={form.organizer}
-                                    onChange={e => update('organizer', e.target.value)}
-                                    className="input-field"
-                                />
-                            </FormField>
-
-                            <FormField label="Event Cover Image URL">
-                                <div className="relative">
-                                    <Image size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                    <input
-                                        type="url"
-                                        placeholder="https://…"
-                                        value={form.image}
-                                        onChange={e => update('image', e.target.value)}
-                                        className="input-field pl-10"
-                                    />
-                                </div>
-                                {form.image && (
-                                    <img src={form.image} alt="preview" className="mt-3 h-40 w-full object-cover rounded-xl" onError={e => e.target.style.display = 'none'} />
-                                )}
-                            </FormField>
-                        </div>
-                    )}
-
-                    {/* STEP 2 – Details */}
-                    {step === 2 && (
-                        <div className="space-y-6">
-                            <h2 className="font-display font-bold text-2xl text-white mb-6">Date, Time &amp; Location</h2>
-
-                            <div className="grid sm:grid-cols-2 gap-5">
-                                <FormField label="Start Date" error={errors.date} required>
-                                    <div className="relative">
-                                        <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                        <input
-                                            type="date"
-                                            value={form.date}
-                                            onChange={e => update('date', e.target.value)}
-                                            className="input-field pl-10"
-                                        />
-                                    </div>
-                                </FormField>
-
-                                <FormField label="End Date">
-                                    <div className="relative">
-                                        <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                        <input
-                                            type="date"
-                                            value={form.endDate}
-                                            min={form.date}
-                                            onChange={e => update('endDate', e.target.value)}
-                                            className="input-field pl-10"
-                                        />
-                                    </div>
-                                </FormField>
-                            </div>
-
-                            <FormField label="Start Time" error={errors.time} required>
-                                <div className="relative">
-                                    <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                    <input
-                                        type="time"
-                                        value={form.time}
-                                        onChange={e => update('time', e.target.value)}
-                                        className="input-field pl-10"
-                                    />
-                                </div>
-                            </FormField>
-
-                            <FormField label="Location / Venue" error={errors.location} required>
-                                <div className="relative">
-                                    <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                    <input
-                                        type="text"
-                                        placeholder="Venue name, city, state"
-                                        value={form.location}
-                                        onChange={e => update('location', e.target.value)}
-                                        className="input-field pl-10"
-                                    />
-                                </div>
-                            </FormField>
-
-                            <FormField label="Tags (comma separated)">
-                                <div className="relative">
-                                    <Tag size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                    <input
-                                        type="text"
-                                        placeholder="Music, Outdoor, Festival"
-                                        value={form.tags}
-                                        onChange={e => update('tags', e.target.value)}
-                                        className="input-field pl-10"
-                                    />
-                                </div>
-                            </FormField>
-                        </div>
-                    )}
-
-                    {/* STEP 3 – Tickets */}
-                    {step === 3 && (
-                        <div className="space-y-6">
-                            <h2 className="font-display font-bold text-2xl text-white mb-6">Tickets &amp; Capacity</h2>
-
-                            <FormField label="Max Capacity" error={errors.capacity} required>
-                                <div className="relative">
-                                    <Users size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                    <input
-                                        type="number"
-                                        placeholder="e.g. 500"
-                                        min={1}
-                                        value={form.capacity}
-                                        onChange={e => update('capacity', e.target.value)}
-                                        className="input-field pl-10"
-                                    />
-                                </div>
-                            </FormField>
-
-                            <div>
-                                <label className="flex items-center gap-3 cursor-pointer mb-5">
-                                    <div
-                                        onClick={() => update('isFree', !form.isFree)}
-                                        className={`relative w-12 h-6 rounded-full transition-colors duration-300 cursor-pointer ${form.isFree ? 'bg-brand-600' : 'bg-gray-700'}`}
-                                    >
-                                        <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 ${form.isFree ? 'translate-x-6' : ''}`} />
-                                    </div>
-                                    <span className="text-gray-200 font-medium">This is a free event</span>
-                                </label>
-
-                                {!form.isFree && (
-                                    <FormField label="Ticket Price (USD)" error={errors.price}>
-                                        <div className="relative">
-                                            <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                            <input
-                                                type="number"
-                                                placeholder="0.00"
-                                                min={0}
-                                                step={0.01}
-                                                value={form.price}
-                                                onChange={e => update('price', e.target.value)}
-                                                className="input-field pl-10"
-                                            />
-                                        </div>
-                                    </FormField>
-                                )}
-                            </div>
-
-                            <div className="p-4 bg-brand-500/5 border border-brand-500/20 rounded-2xl flex gap-3">
-                                <Info size={18} className="text-brand-400 shrink-0 mt-0.5" />
-                                <p className="text-gray-400 text-sm leading-relaxed">
-                                    EventFlow charges a 5% service fee on paid tickets. Free events always have zero platform fees.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* STEP 4 – Review */}
-                    {step === 4 && (
-                        <div className="space-y-6">
-                            <h2 className="font-display font-bold text-2xl text-white mb-6">Review &amp; Publish</h2>
-
-                            {form.image && (
-                                <img src={form.image} alt="Cover" className="w-full h-48 object-cover rounded-2xl" onError={e => e.target.style.display = 'none'} />
-                            )}
-
-                            <div className="grid sm:grid-cols-2 gap-4">
-                                {[
-                                    { label: 'Title', value: form.title },
-                                    { label: 'Category', value: CATEGORIES.find(c => c.id === form.category)?.label },
-                                    { label: 'Date', value: form.date + (form.endDate ? ` → ${form.endDate}` : '') },
-                                    { label: 'Time', value: form.time },
-                                    { label: 'Location', value: form.location },
-                                    { label: 'Capacity', value: form.capacity ? `${Number(form.capacity).toLocaleString()} attendees` : '—' },
-                                    { label: 'Price', value: form.isFree ? 'Free' : form.price ? `$${form.price}` : '—' },
-                                    { label: 'Organizer', value: form.organizer || '—' },
-                                ].map(({ label, value }) => (
-                                    <div key={label} className="glass rounded-xl p-4">
-                                        <div className="text-xs text-gray-500 mb-1">{label}</div>
-                                        <div className="text-gray-200 font-medium text-sm">{value || '—'}</div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {form.description && (
-                                <div className="glass rounded-xl p-4">
-                                    <div className="text-xs text-gray-500 mb-1">Description</div>
-                                    <div className="text-gray-300 text-sm leading-relaxed line-clamp-4">{form.description}</div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Footer buttons */}
-                    <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/5">
-                        <button
-                            onClick={() => step > 1 ? setStep(s => s - 1) : navigate(-1)}
-                            className="btn-secondary text-sm"
-                        >
-                            <ArrowLeft size={16} /> Back
-                        </button>
-
-                        {step < 4 ? (
-                            <button onClick={nextStep} className="btn-primary">
-                                Continue <ChevronRight size={16} />
-                            </button>
-                        ) : (
-                            <button onClick={handleSubmit} className="btn-accent text-base px-8 py-3">
-                                <Zap size={18} /> Publish Event
-                            </button>
-                        )}
-                    </div>
+                <h2 className="font-display font-black text-4xl text-white mb-3">Message Sent!</h2>
+                <p className="text-gray-400 text-lg mb-2">Thank you, <span className="text-white font-semibold">{form.name}</span>!</p>
+                <p className="text-gray-500 text-sm mb-8">I'll review your inquiry and get back to you within 24 hours.</p>
+                <div className="flex gap-3 justify-center">
+                    <Link to="/" className="btn-primary">Back to Home</Link>
+                    <Link to="/events" className="btn-secondary">View Portfolio</Link>
                 </div>
             </div>
         </div>
     )
-}
 
-function FormField({ label, error, required, children }) {
     return (
-        <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-                {label}
-                {required && <span className="text-brand-400 ml-1">*</span>}
-            </label>
-            {children}
-            {error && <p className="mt-1.5 text-red-400 text-xs flex items-center gap-1"><Info size={12} />{error}</p>}
+        <div className="min-h-screen pt-20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-16">
+                <div className="grid lg:grid-cols-5 gap-10 lg:gap-14">
+
+                    {/* Left sidebar */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Intro */}
+                        <div>
+                            <div className="badge bg-brand-500/15 text-brand-300 border border-brand-500/25 mb-4">Let's Connect</div>
+                            <h1 className="font-display font-black text-4xl sm:text-5xl text-white leading-tight mb-4">
+                                Plan Your <span className="gradient-text">Dream Event</span>
+                            </h1>
+                            <p className="text-gray-400 text-lg leading-relaxed">
+                                Ready to create something extraordinary? Tell me about your vision and I'll get back to you within 24 hours.
+                            </p>
+                        </div>
+
+                        {/* Contact details */}
+                        <div className="glass-card rounded-2xl p-6 space-y-4"
+                            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+                            <h3 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Contact Details</h3>
+                            <a href={`mailto:${PROFILE.email}`} className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors">
+                                <div className="w-9 h-9 rounded-xl bg-brand-500/15 border border-brand-500/25 flex items-center justify-center flex-shrink-0">
+                                    <Mail size={15} className="text-brand-400" />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600 mb-0.5">Email</p>
+                                    <p className="text-sm font-medium">{PROFILE.email}</p>
+                                </div>
+                            </a>
+                            <div className="flex items-center gap-3 text-gray-400">
+                                <div className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center flex-shrink-0">
+                                    <Phone size={15} className="text-violet-400" />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600 mb-0.5">Phone</p>
+                                    <p className="text-sm font-medium">{PROFILE.phone}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 text-gray-400">
+                                <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center flex-shrink-0">
+                                    <MapPin size={15} className="text-cyan-400" />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600 mb-0.5">Location</p>
+                                    <p className="text-sm font-medium">{PROFILE.location}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Social */}
+                        <div className="glass-card rounded-2xl p-6"
+                            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+                            <h3 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Follow My Work</h3>
+                            <div className="flex gap-3">
+                                {[
+                                    { icon: Instagram, href: `https://instagram.com/${PROFILE.instagram}`, label: "Instagram", color: "text-pink-400" },
+                                    { icon: Linkedin, href: `https://linkedin.com/in/${PROFILE.linkedin}`, label: "LinkedIn", color: "text-blue-400" },
+                                    { icon: Twitter, href: `https://twitter.com/${PROFILE.twitter}`, label: "Twitter", color: "text-sky-400" },
+                                ].map(({ icon: Icon, href, label, color }) => (
+                                    <a key={label} href={href} aria-label={label}
+                                        className="flex-1 flex flex-col items-center gap-2 p-3 glass rounded-xl hover:bg-white/8 transition-all group">
+                                        <Icon size={18} className={`${color} group-hover:scale-110 transition-transform`} />
+                                        <span className="text-xs text-gray-500">{label}</span>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Why hire me */}
+                        <div className="glass-card rounded-2xl p-6 space-y-3"
+                            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+                            <h3 className="font-semibold text-white text-sm uppercase tracking-wider">Why Work With Me</h3>
+                            {[
+                                { icon: Award, text: "12 industry awards & recognitions", color: "text-amber-400" },
+                                { icon: Users, text: "500K+ guests hosted across 200+ events", color: "text-cyan-400" },
+                                { icon: CheckCircle, text: "94% client retention rate", color: "text-green-400" },
+                                { icon: Heart, text: "Obsessive attention to every detail", color: "text-rose-400" },
+                            ].map(({ icon: Icon, text, color }) => (
+                                <div key={text} className="flex items-center gap-3">
+                                    <Icon size={15} className={`${color} flex-shrink-0`} />
+                                    <span className="text-gray-400 text-sm">{text}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Form */}
+                    <div className="lg:col-span-3">
+                        <form onSubmit={handleSubmit} noValidate
+                            className="glass-card rounded-3xl p-7 sm:p-8 space-y-6"
+                            style={{ boxShadow: "0 16px 60px rgba(0,0,0,0.4)" }}>
+                            <h2 className="font-display font-bold text-xl text-white">Tell Me About Your Event</h2>
+
+                            {/* Name + Email */}
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Full Name *</label>
+                                    <input value={form.name} onChange={e => set("name", e.target.value)}
+                                        placeholder="Jane Smith" className={`input-field ${errors.name ? "ring-2 ring-red-500 border-red-500" : ""}`} />
+                                    {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Email *</label>
+                                    <input type="email" value={form.email} onChange={e => set("email", e.target.value)}
+                                        placeholder="jane@company.com" className={`input-field ${errors.email ? "ring-2 ring-red-500 border-red-500" : ""}`} />
+                                    {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                                </div>
+                            </div>
+
+                            {/* Phone + Date */}
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Phone</label>
+                                    <input value={form.phone} onChange={e => set("phone", e.target.value)}
+                                        placeholder="+1 (212) 000-0000" className="input-field" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Event Date (approx.)</label>
+                                    <input type="date" value={form.eventDate} onChange={e => set("eventDate", e.target.value)}
+                                        className="input-field" />
+                                </div>
+                            </div>
+
+                            {/* Event type */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Event Type *</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {INQUIRY_TYPES.map(t => (
+                                        <button key={t.id} type="button" onClick={() => set("inquiryType", t.id)}
+                                            className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-xs font-medium border transition-all ${form.inquiryType === t.id
+                                                    ? "bg-brand-600/25 text-brand-300 border-brand-500/50 shadow-lg shadow-brand-600/20"
+                                                    : "glass text-gray-400 border-white/10 hover:bg-white/8 hover:text-white"
+                                                }`}>
+                                            <span className="text-xl">{t.icon}</span>
+                                            {t.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                {errors.inquiryType && <p className="text-red-400 text-xs mt-1.5">{errors.inquiryType}</p>}
+                            </div>
+
+                            {/* Budget + Guests */}
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Estimated Budget</label>
+                                    <select value={form.budget} onChange={e => set("budget", e.target.value)} className="input-field bg-gray-900">
+                                        <option value="">Select range...</option>
+                                        {BUDGET_RANGES.map(b => <option key={b} value={b}>{b}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Expected Guests</label>
+                                    <input value={form.guests} onChange={e => set("guests", e.target.value)}
+                                        placeholder="e.g. 200" type="number" min="1" className="input-field" />
+                                </div>
+                            </div>
+
+                            {/* Message */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Tell Me Your Vision *</label>
+                                <textarea value={form.message} onChange={e => set("message", e.target.value)}
+                                    placeholder="Describe your event, theme, key requirements, and any special requests..."
+                                    rows={5} className={`input-field resize-none ${errors.message ? "ring-2 ring-red-500 border-red-500" : ""}`} />
+                                {errors.message && <p className="text-red-400 text-xs mt-1">{errors.message}</p>}
+                            </div>
+
+                            <button type="submit" className="btn-primary w-full justify-center text-base py-3.5">
+                                <Send size={16} />
+                                Send My Inquiry
+                            </button>
+
+                            <p className="text-center text-xs text-gray-600">
+                                I typically respond within 24 hours. Your information is kept strictly confidential.
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }

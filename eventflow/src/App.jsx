@@ -9,15 +9,16 @@ import DashboardPage from './pages/DashboardPage'
 
 export default function App() {
     return (
-        <div className="min-h-screen gradient-bg">
+        <div className="min-h-screen">
             <Navbar />
             <main>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/events" element={<EventsPage />} />
                     <Route path="/events/:id" element={<EventDetailPage />} />
-                    <Route path="/create" element={<CreateEventPage />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/services" element={<DashboardPage />} />
+                    <Route path="/about" element={<DashboardPage />} />
+                    <Route path="/contact" element={<CreateEventPage />} />
                 </Routes>
             </main>
             <Footer />

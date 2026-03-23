@@ -1,270 +1,215 @@
-import { useState, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Search, SlidersHorizontal, X, Grid3X3, List, ChevronDown } from 'lucide-react'
-import { MOCK_EVENTS, CATEGORIES } from '../data/events'
-import { formatDate, formatPrice, getCapacityPercent } from '../utils/helpers'
-import EventCard from '../components/EventCard'
+﻿import { useState, useMemo } from "react"
+import { useSearchParams } from "react-router-dom"
+import { Search, LayoutGrid, LayoutList, Filter, X, Trophy, MapPin, Users, CalendarDays } from "lucide-react"
+import { EVENTS, EVENT_CATEGORIES } from "../data/events"
+import EventCard from "../components/EventCard"
 
 const SORT_OPTIONS = [
-    { value: 'date-asc', label: 'Date: Upcoming First' },
-    { value: 'date-desc', label: 'Date: Latest First' },
-    { value: 'price-asc', label: 'Price: Low to High' },
-    { value: 'price-desc', label: 'Price: High to Low' },
-    { value: 'popularity', label: 'Most Popular' },
+    { value: "newest", label: "Newest First" },
+    { value: "oldest", label: "Oldest First" },
+    { value: "guests-high", label: "Most Guests" },
+    { value: "guests-low", label: "Fewest Guests" },
 ]
+
+function getCategoryStyle(categoryId) {
+    const styles = {
+        corporate: { bg: "bg-blue-500/15", text: "text-blue-300", border: "border-blue-500/25", dot: "bg-blue-400" },
+        wedding: { bg: "bg-pink-500/15", text: "text-pink-300", border: "border-pink-500/25", dot: "bg-pink-400" },
+        concert: { bg: "bg-purple-500/15", text: "text-purple-300", border: "border-purple-500/25", dot: "bg-purple-400" },
+        conference: { bg: "bg-cyan-500/15", text: "text-cyan-300", border: "border-cyan-500/25", dot: "bg-cyan-400" },
+        gala: { bg: "bg-amber-500/15", text: "text-amber-300", border: "border-amber-500/25", dot: "bg-amber-400" },
+        social: { bg: "bg-rose-500/15", text: "text-rose-300", border: "border-rose-500/25", dot: "bg-rose-400" },
+        sports: { bg: "bg-green-500/15", text: "text-green-300", border: "border-green-500/25", dot: "bg-green-400" },
+    }
+    return styles[categoryId] || { bg: "bg-white/8", text: "text-gray-300", border: "border-white/20", dot: "bg-gray-400" }
+}
+
+function EventListRow({ event }) {
+    const cat = EVENT_CATEGORIES.find(c => c.id === event.category)
+    const style = getCategoryStyle(event.category)
+    return (
+        <a href={`/events/${event.id}`}
+            className="group glass-card rounded-2xl overflow-hidden flex gap-0 hover:-translate-y-0.5 transition-all duration-300 hover:border-brand-500/25"
+            style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
+            <div className="relative w-48 sm:w-60 flex-shrink-0 overflow-hidden">
+                <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-gray-950/40" />
+                {event.award && (
+                    <div className="absolute top-2 left-2">
+                        <span className="badge bg-amber-500/25 text-amber-300 border border-amber-500/30 backdrop-blur-sm text-xs">
+                            <Trophy size={9} /> Award
+                        </span>
+                    </div>
+                )}
+            </div>
+            <div className="flex-1 p-5 flex flex-col gap-2 min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <span className={`badge ${style.bg} ${style.text} border ${style.border} text-xs mb-2`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                            {cat?.label || event.category}
+                        </span>
+                        <h3 className="font-display font-bold text-white text-lg leading-tight group-hover:text-brand-300 transition-colors truncate">
+                            {event.title}
+                        </h3>
+                        <p className="text-xs text-gray-500">{event.client}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                        <span className="font-display font-black text-xl text-white">{event.budget}</span>
+                        <p className="text-xs text-gray-600">budget</p>
+                    </div>
+                </div>
+                <p className="text-gray-400 text-sm line-clamp-2">{event.description}</p>
+                <div className="flex flex-wrap gap-3 mt-auto pt-2 border-t border-white/6">
+                    <span className="flex items-center gap-1 text-xs text-gray-500"><CalendarDays size={11} /> {event.date}</span>
+                    <span className="flex items-center gap-1 text-xs text-gray-500"><MapPin size={11} /> {event.location}</span>
+                    <span className="flex items-center gap-1 text-xs text-gray-500"><Users size={11} /> {event.guests.toLocaleString()} guests</span>
+                </div>
+            </div>
+        </a>
+    )
+}
 
 export default function EventsPage() {
     const [searchParams, setSearchParams] = useSearchParams()
-    const [query, setQuery] = useState('')
-    const [sort, setSort] = useState('date-asc')
-    const [showFilters, setShow] = useState(false)
+    const [query, setQuery] = useState("")
+    const [sort, setSort] = useState("newest")
     const [viewGrid, setViewGrid] = useState(true)
-    const [priceMax, setPriceMax] = useState(500)
+    const [showFilters, setShowFilters] = useState(false)
 
-    const activeCategory = searchParams.get('category') || ''
-
+    const activeCategory = searchParams.get("category") || "all"
     const setCategory = cat => {
-        if (cat) setSearchParams({ category: cat })
+        if (cat && cat !== "all") setSearchParams({ category: cat })
         else setSearchParams({})
     }
 
     const filtered = useMemo(() => {
-        let list = [...MOCK_EVENTS]
-
+        let list = [...EVENTS]
         if (query.trim()) {
             const q = query.toLowerCase()
             list = list.filter(e =>
                 e.title.toLowerCase().includes(q) ||
+                e.client.toLowerCase().includes(q) ||
                 e.description.toLowerCase().includes(q) ||
-                e.location.toLowerCase().includes(q) ||
                 e.tags.some(t => t.toLowerCase().includes(q))
             )
         }
-
-        if (activeCategory) list = list.filter(e => e.category === activeCategory)
-        list = list.filter(e => e.price <= priceMax)
-
+        if (activeCategory && activeCategory !== "all") {
+            list = list.filter(e => e.category === activeCategory)
+        }
         switch (sort) {
-            case 'date-asc': list.sort((a, b) => new Date(a.date) - new Date(b.date)); break
-            case 'date-desc': list.sort((a, b) => new Date(b.date) - new Date(a.date)); break
-            case 'price-asc': list.sort((a, b) => a.price - b.price); break
-            case 'price-desc': list.sort((a, b) => b.price - a.price); break
-            case 'popularity': list.sort((a, b) => b.registered - a.registered); break
+            case "oldest": list.sort((a, b) => a.date.localeCompare(b.date)); break
+            case "guests-high": list.sort((a, b) => b.guests - a.guests); break
+            case "guests-low": list.sort((a, b) => a.guests - b.guests); break
+            default: list.sort((a, b) => b.date.localeCompare(a.date)); break
         }
         return list
-    }, [query, activeCategory, sort, priceMax])
+    }, [query, activeCategory, sort])
+
+    const totalGuests = EVENTS.reduce((s, e) => s + e.guests, 0)
+    const awardCount = EVENTS.filter(e => e.award).length
 
     return (
-        <div className="min-h-screen pt-28 pb-20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                {/* Header */}
-                <div className="mb-10">
-                    <h1 className="font-display font-extrabold text-4xl sm:text-5xl text-white mb-3">
-                        Explore <span className="gradient-text">Events</span>
+        <div className="min-h-screen pt-20">
+            {/* Page header */}
+            <section className="py-16 px-4 sm:px-8 max-w-7xl mx-auto">
+                <div className="max-w-3xl">
+                    <div className="badge bg-brand-500/15 text-brand-300 border border-brand-500/25 mb-4">Portfolio</div>
+                    <h1 className="font-display font-black text-5xl sm:text-6xl text-white mb-4">
+                        Event <span className="gradient-text">Portfolio</span>
                     </h1>
-                    <p className="text-gray-400 text-lg">Discover {MOCK_EVENTS.length} curated events from around the world</p>
+                    <p className="text-xl text-gray-400 leading-relaxed">
+                        {EVENTS.length} events. {totalGuests.toLocaleString()}+ guests. {awardCount} industry awards.
+                        Every event a story worth telling.
+                    </p>
                 </div>
 
-                {/* Search + Filter bar */}
-                <div className="flex flex-col sm:flex-row gap-3 mb-8">
-                    <div className="relative flex-1">
-                        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                        <input
-                            type="text"
-                            placeholder="Search events, locations, tags…"
-                            value={query}
-                            onChange={e => setQuery(e.target.value)}
-                            className="input-field pl-11"
-                        />
-                        {query && (
-                            <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Sort */}
-                    <div className="relative">
-                        <select
-                            value={sort}
-                            onChange={e => setSort(e.target.value)}
-                            className="input-field appearance-none pr-10 cursor-pointer min-w-[200px]"
-                        >
-                            {SORT_OPTIONS.map(o => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                        </select>
-                        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-                    </div>
-
-                    {/* Filter toggle */}
-                    <button
-                        onClick={() => setShow(!showFilters)}
-                        className={`btn-secondary gap-2 ${showFilters ? 'bg-brand-600/20 text-brand-400 border-brand-500/30' : ''}`}
-                    >
-                        <SlidersHorizontal size={16} />
-                        Filters
-                    </button>
-
-                    {/* View toggle */}
-                    <div className="flex glass rounded-xl overflow-hidden">
-                        <button
-                            onClick={() => setViewGrid(true)}
-                            className={`p-3 transition-colors ${viewGrid ? 'bg-brand-600/30 text-brand-400' : 'text-gray-500 hover:text-white'}`}
-                        >
-                            <Grid3X3 size={18} />
-                        </button>
-                        <button
-                            onClick={() => setViewGrid(false)}
-                            className={`p-3 transition-colors ${!viewGrid ? 'bg-brand-600/30 text-brand-400' : 'text-gray-500 hover:text-white'}`}
-                        >
-                            <List size={18} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Expandable filters */}
-                {showFilters && (
-                    <div className="glass-dark rounded-2xl p-6 mb-8 animate-fade-in">
-                        <div className="grid sm:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-300 mb-3">Max Price: ${priceMax}</label>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={500}
-                                    step={10}
-                                    value={priceMax}
-                                    onChange={e => setPriceMax(Number(e.target.value))}
-                                    className="w-full accent-brand-500 cursor-pointer"
-                                />
-                                <div className="flex justify-between text-xs text-gray-600 mt-1">
-                                    <span>Free</span><span>$500</span>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-300 mb-3">Active filters</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {activeCategory && (
-                                        <button
-                                            onClick={() => setCategory('')}
-                                            className="badge bg-brand-500/20 text-brand-400 border border-brand-500/30 gap-1"
-                                        >
-                                            {CATEGORIES.find(c => c.id === activeCategory)?.label}
-                                            <X size={10} />
-                                        </button>
-                                    )}
-                                    {priceMax < 500 && (
-                                        <button onClick={() => setPriceMax(500)}
-                                            className="badge bg-gray-700 text-gray-300 border border-gray-600 gap-1"
-                                        >
-                                            Max ${priceMax} <X size={10} />
-                                        </button>
-                                    )}
-                                    {!activeCategory && priceMax === 500 && (
-                                        <span className="text-gray-500 text-sm">No active filters</span>
-                                    )}
-                                </div>
-                            </div>
+                {/* Mini stats */}
+                <div className="flex flex-wrap gap-4 mt-8">
+                    {[
+                        { label: "Total Events", value: EVENTS.length },
+                        { label: "Total Guests", value: totalGuests.toLocaleString() + "+" },
+                        { label: "Award-Winning", value: awardCount },
+                        { label: "Categories", value: EVENT_CATEGORIES.length - 1 },
+                    ].map(s => (
+                        <div key={s.label} className="glass-card rounded-xl px-5 py-3">
+                            <span className="font-display font-black text-lg text-white">{s.value}</span>
+                            <span className="text-gray-500 text-sm ml-2">{s.label}</span>
                         </div>
-                    </div>
-                )}
+                    ))}
+                </div>
+            </section>
 
-                {/* Category pills */}
-                <div className="flex gap-2 overflow-x-auto pb-2 mb-8 scrollbar-hide">
-                    <button
-                        onClick={() => setCategory('')}
-                        className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all ${!activeCategory ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30' : 'glass text-gray-400 hover:text-white hover:bg-white/10'
-                            }`}
-                    >
-                        All Events
-                    </button>
-                    {CATEGORIES.map(cat => (
-                        <button
-                            key={cat.id}
-                            onClick={() => setCategory(cat.id)}
-                            className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all border ${activeCategory === cat.id
-                                ? `${cat.color} shadow-sm`
-                                : 'glass border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-                                }`}
-                        >
-                            {cat.label}
+            {/* Filters + content */}
+            <section className="pb-20 px-4 sm:px-8 max-w-7xl mx-auto">
+                {/* Category tabs */}
+                <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-1">
+                    {EVENT_CATEGORIES.map(cat => (
+                        <button key={cat.id} onClick={() => setCategory(cat.id)}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap border ${activeCategory === cat.id
+                                    ? "bg-brand-600 text-white border-brand-500 shadow-lg shadow-brand-600/30"
+                                    : "glass text-gray-400 hover:text-white hover:bg-white/10 border-white/10"
+                                }`}>
+                            <span>{cat.icon}</span> {cat.label}
                         </button>
                     ))}
                 </div>
 
-                {/* Results count */}
-                <div className="flex items-center justify-between mb-6">
-                    <p className="text-gray-400 text-sm">
-                        <span className="text-white font-semibold">{filtered.length}</span> events found
-                    </p>
-                </div>
-
-                {/* Grid */}
-                {filtered.length > 0 ? (
-                    viewGrid ? (
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                            {filtered.map(event => (
-                                <EventCard key={event.id} event={event} />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col gap-4">
-                            {filtered.map(event => (
-                                <EventListRow key={event.id} event={event} />
-                            ))}
-                        </div>
-                    )
-                ) : (
-                    <div className="text-center py-24">
-                        <div className="text-6xl mb-4">🔍</div>
-                        <h3 className="font-display font-bold text-2xl text-white mb-2">No events found</h3>
-                        <p className="text-gray-400 mb-6">Try adjusting your search or filters</p>
-                        <button onClick={() => { setQuery(''); setCategory(''); setPriceMax(500) }}
-                            className="btn-primary">
-                            Clear all filters
+                {/* Search + sort + view toggle */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-8">
+                    <div className="relative flex-1">
+                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <input value={query} onChange={e => setQuery(e.target.value)}
+                            placeholder="Search events, clients, keywords..."
+                            className="input-field pl-11 pr-10" />
+                        {query && (
+                            <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                                <X size={15} />
+                            </button>
+                        )}
+                    </div>
+                    <select value={sort} onChange={e => setSort(e.target.value)}
+                        className="input-field w-auto bg-gray-900">
+                        {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <div className="flex gap-1 glass border border-white/10 rounded-xl p-1">
+                        <button onClick={() => setViewGrid(true)}
+                            className={`p-2 rounded-lg transition-all ${viewGrid ? "bg-brand-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                            <LayoutGrid size={16} />
+                        </button>
+                        <button onClick={() => setViewGrid(false)}
+                            className={`p-2 rounded-lg transition-all ${!viewGrid ? "bg-brand-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                            <LayoutList size={16} />
                         </button>
                     </div>
+                </div>
+
+                {/* Results count */}
+                <p className="text-sm text-gray-500 mb-5">
+                    Showing <span className="text-white font-semibold">{filtered.length}</span> event{filtered.length !== 1 ? "s" : ""}
+                    {activeCategory !== "all" && <span> in <span className="text-brand-400 capitalize">{activeCategory}</span></span>}
+                    {query && <span> matching "<span className="text-white">{query}</span>"</span>}
+                </p>
+
+                {/* Events grid / list */}
+                {filtered.length === 0 ? (
+                    <div className="text-center py-24 glass-card rounded-2xl">
+                        <div className="text-5xl mb-4">🔍</div>
+                        <h3 className="font-display font-bold text-xl text-white mb-2">No events found</h3>
+                        <p className="text-gray-400 text-sm">Try adjusting your search or filters</p>
+                        <button onClick={() => { setQuery(""); setCategory("all") }}
+                            className="btn-secondary mt-5 text-sm">Clear filters</button>
+                    </div>
+                ) : viewGrid ? (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filtered.map(e => <EventCard key={e.id} event={e} featured={e.featured} />)}
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-4">
+                        {filtered.map(e => <EventListRow key={e.id} event={e} />)}
+                    </div>
                 )}
-            </div>
+            </section>
         </div>
-    )
-}
-
-function EventListRow({ event }) {
-
-    const cat = CATEGORIES.find(c => c.id === event.category)
-    const pct = Math.round((event.registered / event.capacity) * 100)
-
-    return (
-        <a href={`/events/${event.id}`} className="block group">
-            <div className="card flex gap-4 p-4 rounded-2xl hover:border-brand-500/30">
-                <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl object-cover shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                        {cat && <span className={`badge border ${cat.color} text-xs`}>{cat.label}</span>}
-                        {event.trending && <span className="badge bg-accent-500/20 text-accent-400 border border-accent-500/30 text-xs">Trending</span>}
-                    </div>
-                    <h3 className="font-display font-semibold text-white group-hover:text-brand-300 transition-colors line-clamp-1 mb-1">{event.title}</h3>
-                    <p className="text-gray-400 text-sm line-clamp-1 mb-2">{event.description}</p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                        <span>📅 {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        <span>📍 {event.location}</span>
-                        <span>👥 {event.registered.toLocaleString()} / {event.capacity.toLocaleString()}</span>
-                    </div>
-                </div>
-                <div className="shrink-0 flex flex-col items-end justify-between">
-                    <span className="font-bold text-white">{event.price === 0 ? 'Free' : `$${event.price}`}</span>
-                    <span className={`badge ${pct > 85 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                        {pct > 85 ? 'Almost Full' : 'Available'}
-                    </span>
-                </div>
-            </div>
-        </a>
     )
 }

@@ -1,107 +1,87 @@
-import { useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Menu, X, Zap, Bell, User, Plus } from 'lucide-react'
-
-const NAV_LINKS = [
-    { to: '/', label: 'Home' },
-    { to: '/events', label: 'Explore' },
-    { to: '/dashboard', label: 'Dashboard' },
-]
+﻿import { useState, useEffect } from "react"
+import { Link, NavLink, useLocation } from "react-router-dom"
+import { CalendarDays, Menu, X, Star, Mail } from "lucide-react"
 
 export default function Navbar() {
     const [open, setOpen] = useState(false)
-    const navigate = useNavigate()
+    const [scrolled, setScrolled] = useState(false)
+    const { pathname } = useLocation()
+
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 20)
+        window.addEventListener("scroll", onScroll)
+        return () => window.removeEventListener("scroll", onScroll)
+    }, [])
+
+    useEffect(() => { setOpen(false) }, [pathname])
+
+    const links = [
+        { to: "/", label: "Home" },
+        { to: "/events", label: "Portfolio" },
+        { to: "/services", label: "Services" },
+        { to: "/about", label: "About" },
+    ]
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50">
-            <div className="mx-4 mt-4">
-                <div className="glass-dark rounded-2xl px-4 md:px-6 py-3 flex items-center justify-between max-w-7xl mx-auto">
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-gray-950/90 backdrop-blur-xl border-b border-white/8 shadow-xl shadow-black/30" : "bg-transparent"}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16 lg:h-18">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2 group" onClick={() => setOpen(false)}>
-                        <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-accent-500 rounded-lg flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-110 transition-transform">
-                            <Zap size={16} className="text-white fill-white" />
+                    <Link to="/" className="flex items-center gap-2.5 group">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-rose-600 flex items-center justify-center shadow-lg shadow-brand-600/40 group-hover:scale-105 transition-transform">
+                            <CalendarDays size={18} className="text-white" />
                         </div>
-                        <span className="font-display font-bold text-lg text-white">
-                            Event<span className="gradient-text">Flow</span>
+                        <span className="font-display font-bold text-lg text-white tracking-tight">
+                            Sophia<span className="gradient-text">Events</span>
                         </span>
                     </Link>
 
                     {/* Desktop nav */}
-                    <nav className="hidden md:flex items-center gap-1">
-                        {NAV_LINKS.map(({ to, label }) => (
-                            <NavLink
-                                key={to}
-                                to={to}
-                                end={to === '/'}
-                                className={({ isActive }) =>
-                                    `px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
-                                        ? 'bg-brand-600/20 text-brand-400'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                    }`
-                                }
-                            >
-                                {label}
+                    <div className="hidden md:flex items-center gap-1">
+                        {links.map(l => (
+                            <NavLink key={l.to} to={l.to} end={l.to === "/"}
+                                className={({ isActive }) => `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? "text-white bg-white/10" : "text-gray-400 hover:text-white hover:bg-white/6"}`}>
+                                {l.label}
                             </NavLink>
                         ))}
-                    </nav>
-
-                    {/* Desktop actions */}
-                    <div className="hidden md:flex items-center gap-2">
-                        <button className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-                            <Bell size={18} />
-                        </button>
-                        <button
-                            onClick={() => navigate('/create')}
-                            className="btn-primary text-sm px-4 py-2"
-                        >
-                            <Plus size={16} />
-                            Create Event
-                        </button>
-                        <button className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center hover:scale-105 transition-transform">
-                            <User size={14} className="text-white" />
-                        </button>
                     </div>
 
-                    {/* Mobile hamburger */}
-                    <button
-                        className="md:hidden p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
-                        onClick={() => setOpen(!open)}
-                    >
+                    {/* Right side */}
+                    <div className="hidden md:flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/15 border border-green-500/25 rounded-full">
+                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse-slow"></span>
+                            <span className="text-xs font-medium text-green-300">Available for Events</span>
+                        </div>
+                        <Link to="/contact" className="btn-primary text-sm py-2 px-4">
+                            <Mail size={15} />
+                            Hire Me
+                        </Link>
+                    </div>
+
+                    {/* Mobile menu button */}
+                    <button onClick={() => setOpen(!open)} className="md:hidden p-2 rounded-lg glass text-gray-300 hover:text-white transition-colors">
                         {open ? <X size={20} /> : <Menu size={20} />}
                     </button>
                 </div>
-
-                {/* Mobile menu */}
-                {open && (
-                    <div className="glass-dark rounded-2xl mt-2 p-4 md:hidden max-w-7xl mx-auto animate-fade-in">
-                        <nav className="flex flex-col gap-1 mb-4">
-                            {NAV_LINKS.map(({ to, label }) => (
-                                <NavLink
-                                    key={to}
-                                    to={to}
-                                    end={to === '/'}
-                                    onClick={() => setOpen(false)}
-                                    className={({ isActive }) =>
-                                        `px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive
-                                            ? 'bg-brand-600/20 text-brand-400'
-                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                        }`
-                                    }
-                                >
-                                    {label}
-                                </NavLink>
-                            ))}
-                        </nav>
-                        <button
-                            onClick={() => { navigate('/create'); setOpen(false) }}
-                            className="btn-primary w-full justify-center text-sm"
-                        >
-                            <Plus size={16} />
-                            Create Event
-                        </button>
-                    </div>
-                )}
             </div>
-        </header>
+
+            {/* Mobile menu */}
+            {open && (
+                <div className="md:hidden bg-gray-950/98 backdrop-blur-xl border-b border-white/8 px-4 pb-5 pt-2 animate-fade-in">
+                    <div className="flex flex-col gap-1">
+                        {links.map(l => (
+                            <NavLink key={l.to} to={l.to} end={l.to === "/"}
+                                className={({ isActive }) => `px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive ? "text-white bg-white/10" : "text-gray-400 hover:text-white hover:bg-white/6"}`}>
+                                {l.label}
+                            </NavLink>
+                        ))}
+                        <Link to="/contact" className="btn-primary mt-3 justify-center text-sm">
+                            <Mail size={15} />
+                            Hire Me
+                        </Link>
+                    </div>
+                </div>
+            )}
+        </nav>
     )
 }

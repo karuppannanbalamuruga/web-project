@@ -1,275 +1,252 @@
-import { Link } from 'react-router-dom'
-import {
-    ArrowRight, Zap, Star, TrendingUp, Calendar, MapPin,
-    ChevronRight, Play, Shield, Globe, BarChart3, Users
-} from 'lucide-react'
-import { MOCK_EVENTS, STATS, TESTIMONIALS, CATEGORIES } from '../data/events'
-import { getCategoryInfo, formatDate, formatPrice } from '../utils/helpers'
-import EventCard from '../components/EventCard'
+﻿import { Link } from "react-router-dom"
+import { ArrowRight, Award, ChevronRight, ExternalLink, Mail, MapPin, Play, Star, Users, Zap } from "lucide-react"
+import { EVENTS, STATS, TESTIMONIALS, PROFILE, SERVICES, AWARDS } from "../data/events"
+import EventCard from "../components/EventCard"
 
-const FEATURED = MOCK_EVENTS.filter(e => e.featured)
-const TRENDING = MOCK_EVENTS.filter(e => e.trending).slice(0, 4)
+function StatCard({ stat }) {
+    return (
+        <div className="card-stat text-center group hover:border-brand-500/20 cursor-default">
+            <div className="text-3xl mb-2">{stat.icon}</div>
+            <div className="font-display font-black text-3xl text-white mb-1 group-hover:gradient-text transition-all">{stat.value}</div>
+            <div className="text-xs text-gray-500 font-medium uppercase tracking-wider">{stat.label}</div>
+        </div>
+    )
+}
 
-const FEATURES = [
-    {
-        icon: Calendar,
-        title: 'Smart Scheduling',
-        desc: 'AI-powered scheduling suggestions that avoid conflicts and maximize attendance.',
-        color: 'from-brand-500 to-brand-700',
-    },
-    {
-        icon: BarChart3,
-        title: 'Real-time Analytics',
-        desc: 'Track registrations, revenue, and engagement with live dashboards.',
-        color: 'from-purple-500 to-purple-700',
-    },
-    {
-        icon: Shield,
-        title: 'Secure Payments',
-        desc: 'Built-in PCI-compliant payment processing with fraud protection.',
-        color: 'from-green-500 to-teal-700',
-    },
-    {
-        icon: Globe,
-        title: 'Global Reach',
-        desc: 'Multi-currency, multi-language support for events across 180+ countries.',
-        color: 'from-accent-500 to-accent-700',
-    },
-]
+function ServiceCard({ service }) {
+    return (
+        <div className={`${service.bg} border ${service.border} rounded-2xl p-6 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-default group`}
+            style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.25)" }}>
+            <div className="text-4xl">{service.icon}</div>
+            <h3 className="font-display font-bold text-white text-lg">{service.title}</h3>
+            <p className="text-gray-400 text-sm leading-relaxed">{service.description}</p>
+            <Link to={`/events?category=${service.id}`}
+                className="mt-auto flex items-center gap-1 text-sm font-semibold text-white/60 hover:text-white transition-colors group-hover:gap-2">
+                See work <ArrowRight size={14} />
+            </Link>
+        </div>
+    )
+}
 
 export default function HomePage() {
-    const heroEvent = FEATURED[0]
+    const featured = EVENTS.filter(e => e.featured).slice(0, 3)
+    const recent = EVENTS.slice(0, 6)
+    const visibleStats = STATS.slice(0, 4)
 
     return (
-        <div className="pt-24">
-            {/* ── Hero ── */}
-            <section className="relative min-h-[85vh] flex items-center overflow-hidden">
-                {/* Background blobs */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute -top-40 -left-40 w-96 h-96 bg-brand-600/20 rounded-full blur-3xl animate-float" />
-                    <div className="absolute top-20 right-0 w-80 h-80 bg-accent-500/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
-                    <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
-                </div>
+        <div className="min-h-screen">
+            {/* ── HERO ── */}
+            <section className="relative min-h-screen flex items-center pt-20 pb-16 hero-bg overflow-hidden">
+                {/* Decorative rings */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full border border-white/4 pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full border border-white/5 pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-brand-500/10 pointer-events-none" />
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                {/* Floating orbs */}
+                <div className="absolute top-32 right-16 w-72 h-72 rounded-full bg-brand-600/10 blur-3xl animate-pulse-slow pointer-events-none" />
+                <div className="absolute bottom-20 left-12 w-56 h-56 rounded-full bg-violet-600/8 blur-3xl animate-float pointer-events-none" />
+                <div className="absolute top-1/4 left-1/3 w-40 h-40 rounded-full bg-accent-500/6 blur-3xl pointer-events-none" />
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-8 w-full">
+                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                         {/* Left copy */}
                         <div className="animate-slide-up">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full text-sm text-brand-300 font-medium mb-6 border border-brand-500/20">
-                                <Zap size={14} className="text-brand-400" />
-                                The #1 Event Management Platform
+                            {/* Available badge */}
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border"
+                                style={{ background: "rgba(34,197,94,0.08)", borderColor: "rgba(34,197,94,0.2)" }}>
+                                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                                <span className="text-sm font-medium text-green-300">Currently Accepting New Clients</span>
                             </div>
 
-                            <h1 className="font-display font-extrabold text-5xl sm:text-6xl xl:text-7xl leading-tight mb-6 text-balance">
-                                Discover &amp; Host{' '}
-                                <span className="gradient-text">Extraordinary</span>
-                                {' '}Events
+                            <h1 className="font-display font-black text-5xl sm:text-6xl lg:text-7xl leading-[1.05] text-white mb-5">
+                                Creating <span className="gradient-text">Unforgettable</span>{" "}
+                                <span className="block">Experiences</span>
                             </h1>
 
-                            <p className="text-gray-400 text-lg sm:text-xl leading-relaxed mb-8 max-w-lg">
-                                EventFlow makes it effortless to find, create and manage world-class events.
-                                Join 2.8 million attendees already using our platform.
+                            <p className="text-lg text-gray-400 leading-relaxed mb-8 max-w-lg">
+                                {PROFILE.tagline} Award-winning event management for{" "}
+                                <span className="text-white font-medium">corporate, social & entertainment</span> clients worldwide.
                             </p>
 
-                            <div className="flex flex-wrap gap-4">
-                                <Link to="/events" className="btn-primary text-base px-6 py-3">
-                                    Explore Events <ArrowRight size={18} />
+                            <div className="flex flex-wrap gap-3 mb-10">
+                                <Link to="/contact" className="btn-primary text-base px-7 py-3.5">
+                                    <Mail size={16} />
+                                    Hire Me for Your Event
                                 </Link>
-                                <Link to="/create" className="btn-secondary text-base px-6 py-3">
-                                    <Play size={16} className="fill-white" /> Host an Event
+                                <Link to="/events" className="btn-secondary text-base px-7 py-3.5">
+                                    View Portfolio <ArrowRight size={16} />
                                 </Link>
                             </div>
 
-                            {/* Social proof */}
-                            <div className="flex items-center gap-3 mt-8">
-                                <div className="flex -space-x-2">
-                                    {[
-                                        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&q=80',
-                                        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&q=80',
-                                        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&q=80',
-                                        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&q=80',
-                                    ].map((src, i) => (
-                                        <img key={i} src={src} alt="" className="w-9 h-9 rounded-full ring-2 ring-gray-950 object-cover" />
-                                    ))}
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-1">
-                                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="text-amber-400 fill-amber-400" />)}
-                                        <span className="text-white font-semibold text-sm ml-1">4.9</span>
+                            {/* Quick stats */}
+                            <div className="flex items-center gap-6 pt-6 border-t border-white/8">
+                                {[
+                                    { value: "200+", label: "Events" },
+                                    { value: "500K+", label: "Guests" },
+                                    { value: "4.9★", label: "Rating" },
+                                    { value: "10+", label: "Years" },
+                                ].map(s => (
+                                    <div key={s.label}>
+                                        <div className="font-display font-black text-xl text-white">{s.value}</div>
+                                        <div className="text-xs text-gray-500 uppercase tracking-wider">{s.label}</div>
                                     </div>
-                                    <p className="text-gray-500 text-xs">Trusted by 2.8M+ attendees</p>
-                                </div>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Right — featured event card */}
-                        {heroEvent && (
-                            <div className="animate-slide-up hidden lg:block" style={{ animationDelay: '0.2s' }}>
-                                <div className="relative">
-                                    <div className="absolute -inset-4 bg-brand-600/10 rounded-3xl blur-xl" />
-                                    <div className="relative card rounded-3xl overflow-hidden">
-                                        <div className="relative h-64">
-                                            <img src={heroEvent.image} alt={heroEvent.title} className="w-full h-full object-cover" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-gray-950/90 via-gray-950/30 to-transparent" />
-                                            <div className="absolute bottom-4 left-4 right-4">
-                                                <span className={`badge border ${getCategoryInfo(heroEvent.category).color} mb-2`}>
-                                                    {getCategoryInfo(heroEvent.category).label}
-                                                </span>
-                                                <h3 className="font-display font-bold text-white text-xl line-clamp-2">{heroEvent.title}</h3>
-                                            </div>
+                        {/* Right — profile card */}
+                        <div className="hidden lg:flex justify-center animate-fade-in">
+                            <div className="relative">
+                                {/* Main profile card */}
+                                <div className="glass-card rounded-3xl overflow-hidden w-80"
+                                    style={{ boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)" }}>
+                                    <div className="relative h-52 bg-gradient-to-br from-brand-800/50 to-violet-900/50 overflow-hidden">
+                                        <img src={PROFILE.avatar} alt={PROFILE.name}
+                                            className="w-full h-full object-cover opacity-90" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 to-transparent" />
+                                        <div className="absolute bottom-4 left-4 right-4">
+                                            <h3 className="font-display font-bold text-xl text-white">{PROFILE.name}</h3>
+                                            <p className="text-gray-300 text-sm">{PROFILE.title}</p>
                                         </div>
-                                        <div className="p-5 grid grid-cols-2 gap-4">
-                                            <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                                <Calendar size={14} className="text-brand-400" />
-                                                {formatDate(heroEvent.date)}
+                                    </div>
+                                    <div className="p-4 grid grid-cols-3 gap-2 border-b border-white/8">
+                                        {[{ v: "200+", l: "Events" }, { v: "10+", l: "Years" }, { v: "4.9", l: "Rating" }].map(s => (
+                                            <div key={s.l} className="text-center py-2">
+                                                <div className="font-display font-bold text-lg text-white">{s.v}</div>
+                                                <div className="text-xs text-gray-500">{s.l}</div>
                                             </div>
-                                            <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                                <MapPin size={14} className="text-accent-400" />
-                                                Austin TX
-                                            </div>
-                                            <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                                <Users size={14} className="text-green-400" />
-                                                {heroEvent.registered.toLocaleString()} going
-                                            </div>
-                                            <div className="font-bold text-white text-right text-lg">{formatPrice(heroEvent.price)}</div>
-                                        </div>
-                                        <div className="px-5 pb-5">
-                                            <Link to={`/events/${heroEvent.id}`} className="btn-primary w-full justify-center">
-                                                Get Tickets <ArrowRight size={16} />
-                                            </Link>
-                                        </div>
+                                        ))}
+                                    </div>
+                                    <div className="p-4">
+                                        <p className="text-gray-400 text-xs leading-relaxed mb-3">{PROFILE.bio.slice(0, 120)}...</p>
+                                        <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                                            <MapPin size={11} className="text-brand-400" /> {PROFILE.location}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Floating award badge */}
+                                <div className="absolute -top-4 -right-4 glass-card rounded-2xl p-3 flex items-center gap-2.5"
+                                    style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                                    <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                                        <Award size={16} className="text-amber-400" />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-bold text-white">12 Awards</div>
+                                        <div className="text-xs text-gray-500">Industry Recognized</div>
+                                    </div>
+                                </div>
+
+                                {/* Floating client satisfied */}
+                                <div className="absolute -bottom-4 -left-4 glass-card rounded-2xl p-3 flex items-center gap-2.5"
+                                    style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                                    <div className="w-9 h-9 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+                                        <Users size={16} className="text-green-400" />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-bold text-white">95+ Clients</div>
+                                        <div className="text-xs text-gray-500">94% Retention Rate</div>
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* ── Stats ── */}
-            <section className="py-12 border-y border-white/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                        {STATS.map(({ label, value }) => (
-                            <div key={label} className="text-center py-4">
-                                <div className="font-display font-extrabold text-3xl sm:text-4xl gradient-text mb-1">{value}</div>
-                                <div className="text-gray-400 text-sm">{label}</div>
+            {/* ── STATS BANNER ── */}
+            <section className="py-16 border-y border-white/6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-brand-950/30 via-transparent to-violet-950/20 pointer-events-none" />
+                <div className="max-w-7xl mx-auto px-4 sm:px-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+                        {STATS.map(s => (
+                            <div key={s.label} className="text-center p-4 rounded-xl hover:bg-white/4 transition-colors cursor-default">
+                                <div className="text-2xl mb-1">{s.icon}</div>
+                                <div className="font-display font-black text-2xl text-white">{s.value}</div>
+                                <div className="text-xs text-gray-500 uppercase tracking-wider mt-0.5">{s.label}</div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ── Featured Events ── */}
-            <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-end justify-between mb-10">
-                    <div>
-                        <div className="flex items-center gap-2 text-brand-400 text-sm font-semibold mb-2">
-                            <Star size={14} className="fill-brand-400" /> Featured Events
-                        </div>
-                        <h2 className="section-title text-3xl sm:text-4xl">Handpicked for You</h2>
+            {/* ── SERVICES ── */}
+            <section className="py-20 max-w-7xl mx-auto px-4 sm:px-8">
+                <div className="text-center mb-12">
+                    <div className="badge bg-brand-500/15 text-brand-300 border border-brand-500/25 mb-4 mx-auto">
+                        <Zap size={12} /> What I Do
                     </div>
-                    <Link to="/events" className="hidden sm:flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium transition-colors group">
-                        View all <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                </div>
-
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {FEATURED.map(event => (
-                        <EventCard key={event.id} event={event} featured />
-                    ))}
-                </div>
-            </section>
-
-            {/* ── Categories ── */}
-            <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-10">
-                    <h2 className="section-title text-3xl sm:text-4xl mb-3">Browse by Category</h2>
-                    <p className="text-gray-400">Find events that match your passion</p>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {CATEGORIES.map(cat => (
-                        <Link
-                            key={cat.id}
-                            to={`/events?category=${cat.id}`}
-                            className="group glass rounded-2xl p-5 text-center hover:bg-white/10 transition-all hover:-translate-y-1"
-                        >
-                            <div className={`badge ${cat.color} border mx-auto mb-3 text-sm px-4 py-1.5`}>
-                                {cat.label}
-                            </div>
-                            <div className="text-gray-500 text-xs">Explore →</div>
-                        </Link>
-                    ))}
-                </div>
-            </section>
-
-            {/* ── Trending Events ── */}
-            <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-end justify-between mb-10">
-                    <div>
-                        <div className="flex items-center gap-2 text-accent-400 text-sm font-semibold mb-2">
-                            <TrendingUp size={14} /> Trending Now
-                        </div>
-                        <h2 className="section-title text-3xl sm:text-4xl">What&apos;s Hot</h2>
-                    </div>
-                    <Link to="/events" className="hidden sm:flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium transition-colors group">
-                        View all <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                </div>
-
-                <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                    {TRENDING.map(event => (
-                        <EventCard key={event.id} event={event} />
-                    ))}
-                </div>
-            </section>
-
-            {/* ── Features ── */}
-            <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-14">
-                    <h2 className="section-title text-3xl sm:text-4xl mb-3">
-                        Everything You Need to{' '}
-                        <span className="gradient-text">Succeed</span>
+                    <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-4">
+                        Full-Spectrum <span className="gradient-text">Event Services</span>
                     </h2>
-                    <p className="text-gray-400 max-w-xl mx-auto">
-                        Powerful tools designed for modern event creators and attendees alike.
+                    <p className="text-gray-400 text-lg max-w-xl mx-auto">
+                        From intimate celebrations to stadium-scale productions — every detail, handled.
                     </p>
                 </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {SERVICES.map(service => <ServiceCard key={service.id} service={service} />)}
+                </div>
+            </section>
 
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {FEATURES.map(({ icon: Icon, title, desc, color }) => (
-                        <div key={title} className="card p-6">
-                            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center mb-5 shadow-lg`}>
-                                <Icon size={22} className="text-white" />
-                            </div>
-                            <h3 className="font-display font-semibold text-white mb-2">{title}</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+            {/* ── FEATURED EVENTS ── */}
+            <section className="py-20 max-w-7xl mx-auto px-4 sm:px-8">
+                <div className="flex items-end justify-between mb-10">
+                    <div>
+                        <div className="badge bg-brand-500/15 text-brand-300 border border-brand-500/25 mb-3">
+                            <Star size={12} /> Signature Work
                         </div>
+                        <h2 className="font-display font-black text-4xl sm:text-5xl text-white">
+                            Featured <span className="gradient-text">Events</span>
+                        </h2>
+                    </div>
+                    <Link to="/events" className="btn-ghost text-sm hidden md:flex">
+                        All Events <ChevronRight size={16} />
+                    </Link>
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {featured.map(e => <EventCard key={e.id} event={e} featured />)}
+                </div>
+                <div className="text-center mt-8 md:hidden">
+                    <Link to="/events" className="btn-secondary">View All Events <ArrowRight size={16} /></Link>
+                </div>
+            </section>
+
+            {/* ── MARQUEE CLIENTS ── */}
+            <section className="py-14 border-y border-white/6 overflow-hidden">
+                <p className="text-center text-xs text-gray-600 uppercase tracking-widest mb-6">Trusted by world-class clients</p>
+                <div className="flex gap-12 items-center justify-center flex-wrap px-8">
+                    {["Google", "Nike", "Goldman Sachs", "Live Nation", "United Nations", "NYRR", "Four Seasons"].map(c => (
+                        <span key={c} className="font-display font-black text-lg text-gray-700 hover:text-gray-300 transition-colors cursor-default whitespace-nowrap">
+                            {c}
+                        </span>
                     ))}
                 </div>
             </section>
 
-            {/* ── Testimonials ── */}
-            <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-14">
-                    <h2 className="section-title text-3xl sm:text-4xl mb-3">Loved by Event Makers</h2>
-                    <p className="text-gray-400">Don&apos;t take our word for it</p>
+            {/* ── TESTIMONIALS ── */}
+            <section className="py-20 max-w-7xl mx-auto px-4 sm:px-8">
+                <div className="text-center mb-12">
+                    <div className="section-divider" />
+                    <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-3">
+                        What Clients <span className="gradient-text">Say</span>
+                    </h2>
+                    <p className="text-gray-400 text-base">Trusted by executives, celebrities, and private clients alike.</p>
                 </div>
-
-                <div className="grid sm:grid-cols-3 gap-6">
-                    {TESTIMONIALS.map(({ name, role, avatar, text, rating }) => (
-                        <div key={name} className="card p-6">
-                            <div className="flex items-center gap-1 mb-4">
-                                {[...Array(rating)].map((_, i) => (
+                <div className="grid md:grid-cols-3 gap-6">
+                    {TESTIMONIALS.map(t => (
+                        <div key={t.id} className="glass-card rounded-2xl p-6 flex flex-col gap-4 hover:border-brand-500/20 transition-all duration-300 hover:-translate-y-1"
+                            style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.25)" }}>
+                            <div className="flex gap-0.5">
+                                {Array.from({ length: t.rating }).map((_, i) => (
                                     <Star key={i} size={14} className="text-amber-400 fill-amber-400" />
                                 ))}
                             </div>
-                            <p className="text-gray-300 text-sm leading-relaxed mb-5 italic">&ldquo;{text}&rdquo;</p>
-                            <div className="flex items-center gap-3">
-                                <img src={avatar} alt={name} className="w-10 h-10 rounded-full object-cover ring-2 ring-brand-500/30" />
+                            <p className="text-gray-300 text-sm leading-relaxed italic flex-1">"{t.text}"</p>
+                            <div className="flex items-center gap-3 border-t border-white/8 pt-4">
+                                <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full object-cover border border-white/10" />
                                 <div>
-                                    <div className="font-semibold text-white text-sm">{name}</div>
-                                    <div className="text-gray-500 text-xs">{role}</div>
+                                    <p className="font-semibold text-white text-sm">{t.name}</p>
+                                    <p className="text-xs text-gray-500">{t.role}</p>
                                 </div>
                             </div>
                         </div>
@@ -277,28 +254,53 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* ── CTA Banner ── */}
-            <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-700 to-purple-800 p-10 sm:p-16 text-center">
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-                        <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-accent-500/20 rounded-full blur-2xl" />
-                    </div>
-                    <div className="relative">
-                        <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white mb-4 text-balance">
-                            Ready to Host Your Next Event?
-                        </h2>
-                        <p className="text-brand-200 text-lg mb-8 max-w-lg mx-auto">
-                            Join 8,500+ organizers who trust EventFlow to create unforgettable experiences.
-                        </p>
-                        <div className="flex flex-wrap items-center justify-center gap-4">
-                            <Link to="/create" className="btn-accent text-base px-8 py-3">
-                                Start for Free <ArrowRight size={18} />
-                            </Link>
-                            <Link to="/events" className="btn-secondary text-base px-8 py-3 border-white/20">
-                                Explore Events
-                            </Link>
+            {/* ── AWARDS STRIP ── */}
+            <section className="py-16 max-w-7xl mx-auto px-4 sm:px-8">
+                <div className="text-center mb-10">
+                    <h2 className="font-display font-bold text-3xl text-white mb-2">
+                        Industry <span className="gradient-text">Recognition</span>
+                    </h2>
+                    <p className="text-gray-500 text-sm">Honored by leading event industry organizations</p>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {AWARDS.map((a, i) => (
+                        <div key={i} className="glass-card rounded-xl px-5 py-4 flex items-center gap-4 hover:-translate-y-0.5 transition-all duration-300"
+                            style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.2)" }}>
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center flex-shrink-0">
+                                <Award size={18} className="text-amber-400" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="font-semibold text-white text-sm truncate">{a.title}</p>
+                                <p className="text-xs text-gray-500 truncate">{a.org} · {a.year}</p>
+                            </div>
                         </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* ── FINAL CTA ── */}
+            <section className="py-24 px-4 sm:px-8 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-950/40 via-gray-950 to-violet-950/30 pointer-events-none" />
+                <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[600px] h-full bg-brand-600/5 blur-3xl rounded-full pointer-events-none" />
+                <div className="relative max-w-3xl mx-auto text-center">
+                    <div className="badge bg-brand-500/15 text-brand-300 border border-brand-500/25 mb-6 mx-auto">
+                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                        Available Now
+                    </div>
+                    <h2 className="font-display font-black text-5xl sm:text-6xl text-white mb-5 leading-tight">
+                        Let's Make Your <span className="gradient-text">Event Legendary</span>
+                    </h2>
+                    <p className="text-gray-400 text-lg mb-10">
+                        Tell me your vision and I'll transform it into an experience your guests will never forget.
+                    </p>
+                    <div className="flex flex-wrap gap-4 justify-center">
+                        <Link to="/contact" className="btn-primary text-base px-8 py-4">
+                            <Mail size={16} />
+                            Start Planning Today
+                        </Link>
+                        <Link to="/events" className="btn-secondary text-base px-8 py-4">
+                            Explore Portfolio <ExternalLink size={16} />
+                        </Link>
                     </div>
                 </div>
             </section>
